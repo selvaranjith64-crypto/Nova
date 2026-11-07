@@ -2,6 +2,8 @@ name: Build Nova APK
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,10 +19,11 @@ jobs:
       - name: Build debug APK
         run: |
           FILE=$(find . -name settings.gradle.kts | head -1)
-          if [ -z "$FILE" ]; then echo "PROJECT FILES NOT FOUND"; exit 1; fi
           cd "$(dirname "$FILE")"
           gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/Nova.apk"
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Nova-APK
-          path: "**/app-debug.apk"
+          tag_name: nova-latest
+          files: Nova.apk
